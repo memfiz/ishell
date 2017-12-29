@@ -124,6 +124,7 @@ func (c Cmd) FindCmd(args []string) (*Cmd, []string) {
 		}
 		return cmd, args[i:]
 	}
+
 	return cmd, nil
 }
 

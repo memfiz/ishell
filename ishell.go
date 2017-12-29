@@ -52,6 +52,8 @@ type Shell struct {
 	rawArgs           []string
 	progressBar       ProgressBar
 	Actions
+	CmdContext              string
+	CmdContextDefaultAction map[string]string
 }
 
 // New creates a new shell with default settings. Uses standard output and default prompt ">> ".
@@ -237,13 +239,21 @@ func (s *Shell) handleCommand(str []string) (bool, error) {
 	}
 	cmd, args := s.rootCmd.FindCmd(str)
 	if cmd == nil {
-		return false, nil
+		if val, ok := s.CmdContextDefaultAction[s.CmdContext]; ok {
+			cmd, args = s.rootCmd.FindCmd(append([]string{val}, str...))
+			if cmd == nil {
+				return false, nil
+			}
+		} else {
+			return false, nil
+		}
 	}
 	// trigger help if func is not registered or auto help is true
 	if cmd.Func == nil || (s.autoHelp && len(args) == 1 && args[0] == "help") {
 		s.Println(cmd.HelpText())
 		return true, nil
 	}
+
 	c := newContext(s, cmd, args)
 	cmd.Func(c)
 	return true, c.err
